@@ -1,0 +1,71 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model usuarios {
+  id    String @id @default(uuid())
+  nome  String
+  email String @unique
+  senha String
+  tipo  String
+
+  pesquisas pesquisa[]
+}
+
+model municipio {
+  id        Int    @unique
+  nome      String @db.VarChar(100)
+  codigo    String @db.Char(7)
+  codigoUF  String @db.Char(2)
+  UF        String @db.Char(2)
+  padraoNFS String @db.VarChar(20)
+}
+
+model produto {
+  id            Int    @unique
+  descricao     String @db.VarChar(150)
+  idTipoProduto Int
+}
+
+model pessoa {
+  id    Int    @unique
+  nome  String @db.VarChar(100)
+  uf    String @db.Char(2)
+  ativo Int
+}
+
+model pesquisa {
+  id        Int    @id @default(autoincrement())
+  usuarioId String
+
+  uf                     String
+  tipoDaPesquisa         String
+  dataVisita             String
+  cliente                String
+  labPisoDeVendas        String?
+  conPisoDeVendas        String?
+  treinamento            String?
+  vendaPremiada          String
+  pagamentoVendaPremiada String?
+  merchandising          String
+  reposicao              String?
+  prazoEntregaCon        String
+  campanhaDeVendaCon     String?
+  produtoChave           String?
+  linhasDeCredito        String
+  observacao             String?
+
+  usuario usuarios @relation(fields: [usuarioId], references: [id])
+}
+
+model produtoChave {
+  id    Int    @id @default(autoincrement())
+  nome  String
+  preco Float
+}
