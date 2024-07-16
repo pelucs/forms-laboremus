@@ -1,22 +1,30 @@
-import { Input } from "@/components/ui/input";
-import { Header } from "@/components/header";
-import { format, subDays } from "date-fns";
-import { useEffect, useState } from "react";
-import { DateRange } from "react-day-picker";
-import { DatePicker } from "@/components/dashboard/researchs/date-picker";
 import Cookies from "js-cookie";
+
 import { api } from "@/lib/api";
-import { getUser } from "@/lib/auth";
-import { valueFormated } from "@/helpers/regular-expressions";
-import { IResearch } from "@/utils/researchs-types";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ptBR } from "date-fns/locale";
 import { Eye } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Menu } from "@/components/menu";
+import { ptBR } from "date-fns/locale";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Header } from "@/components/header";
+import { getUser } from "@/lib/auth";
+import { Skeleton } from "@/components/ui/skeleton";
+import { IResearch } from "@/utils/researchs-types";
+import { DateRange } from "react-day-picker";
+import { DatePicker } from "@/components/dashboard/researchs/date-picker";
+import { valueFormated } from "@/helpers/regular-expressions";
+import { format, subDays } from "date-fns";
+import { useEffect, useState } from "react";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 
 async function getResearchs(date: DateRange | undefined, setIsLoading: (newState: boolean) => void) {
   setIsLoading(true);

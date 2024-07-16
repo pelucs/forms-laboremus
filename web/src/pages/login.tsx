@@ -8,6 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import logo100Anos from '../../public/logo-100-anos.png';
 import logo100AnosBranca from '../../public/logo-100-anos-branca.png';
+import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 
 const formSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -17,6 +19,8 @@ const formSchema = z.object({
 type FormTypes = z.infer<typeof formSchema>;
 
 export function Login() {
+
+  const [visiblePassword, setVisiblePassword] = useState<boolean>(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormTypes>({
     resolver: zodResolver(formSchema)
@@ -76,12 +80,25 @@ export function Login() {
           <div className="flex flex-col gap-2">
             <label htmlFor="email" className="text-xs uppercase font-semibold text-muted-foreground">Senha</label>
             
-            <Input 
-              id="password"
-              type="password"
-              {...register("password")}
-              placeholder="Insira sua senha"
-            />
+            <div className="relative">
+              <Input 
+                id="password"
+                type={visiblePassword ? "text" : "password"}
+                {...register("password")}
+                placeholder="Insira sua senha"
+                className="pr-10"
+              />
+
+              <Button 
+                type="button"
+                size={"icon"} 
+                variant={"ghost"} 
+                className="size-6 absolute right-2 top-[6px]"
+                onClick={() => setVisiblePassword(!visiblePassword)}
+              >
+                { visiblePassword ? <EyeOff className="size-4"/> : <Eye className="size-4"/>}
+              </Button>
+            </div>
 
             {errors.password && (
               <span className="text-xs text-red-500">{errors.password.message}</span>

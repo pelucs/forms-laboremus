@@ -1,11 +1,11 @@
 import { api } from "@/lib/api";
+import { Card } from "../ui/card";
 import { ptBR } from "date-fns/locale";
 import { format } from "date-fns";
 import { Skeleton } from "../ui/skeleton";
 import { Separator } from "../ui/separator";
 import { IResearch } from "@/utils/researchs-types";
 import { formatReal } from "@/helpers/format-currency";
-import { Card, CardHeader } from "../ui/card";
 import { useEffect, useState } from "react";
 
 import Cookies from "js-cookie";
@@ -56,9 +56,9 @@ export function ResearchCard({ idResearch }: ResearchCardProps) {
       <div>
         {!isLoading ? (
           research ? (
-            <div className="mt-5 flex items-start gap-5">
-              <Card className="flex-1 p-10 bg-secondary/50">
-                <div className="grid grid-cols-4 gap-5">
+            <div className="mt-5 flex flex-col-reverse md:flex-row items-start gap-5">
+              <Card className="flex-1 p-5 md:p-10 bg-secondary/50">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
                   <div>
                     <h1 className="text-sm text-muted-foreground leading-tight">ID da pesquisa</h1>
                     <span className="font-medium">#{idResearch}</span>
@@ -167,7 +167,7 @@ export function ResearchCard({ idResearch }: ResearchCardProps) {
                     <h1 className="text-sm text-muted-foreground leading-tight">Laboremus no piso de vendas</h1>
       
                     {JSON.parse(research.labPisoDeVendas).length > 0 ? (
-                      <div className="mt-2 grid grid-cols-4 gap-2">
+                      <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2">
                         {JSON.parse(research.labPisoDeVendas).map((lab: { name: string, price: number, amount: number }) => (
                           <div key={lab.name} className="p-4 space-y-2 bg-secondary rounded-md">
                             <div>
@@ -198,7 +198,7 @@ export function ResearchCard({ idResearch }: ResearchCardProps) {
                     <h1 className="text-sm text-muted-foreground leading-tight">Máquinas concorrentes no piso de vendas</h1>
       
                     {JSON.parse(research.conPisoDeVendas).length > 0 ? (
-                      <div className="mt-2 grid grid-cols-4 gap-2">
+                      <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2">
                         {JSON.parse(research.conPisoDeVendas).map((con: { name: string, price: number, amount: number }) => (
                           <div key={con.name} className="p-4 space-y-2 bg-secondary rounded-md">
                             <div>
@@ -229,7 +229,7 @@ export function ResearchCard({ idResearch }: ResearchCardProps) {
                     <h1 className="text-sm text-muted-foreground leading-tight">Produtos chaves identificados</h1>
       
                     {JSON.parse(research.produtoChave).length > 0 ? (
-                      <div className="mt-2 grid grid-cols-4 gap-2">
+                      <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2">
                         {JSON.parse(research.produtoChave).map((productKey: { name: string, price: number }) => (
                           <div key={productKey.name} className="p-4 space-y-2 bg-secondary rounded-md">
                             <div>
@@ -253,18 +253,20 @@ export function ResearchCard({ idResearch }: ResearchCardProps) {
                 </div>
               </Card>
       
-              <Card className="sticky top-20 p-10 w-fit h-fit bg-secondary/50">
-                <CardHeader className="flex flex-col items-center p-0">
-                  <div className="text-white size-20 flex items-center justify-center rounded-full text-3xl font-bold bg-primary">
+              <Card className="md:sticky md:top-20 p-5 md:p-10 w-full md:w-fit h-fit bg-secondary/50">
+                <div className="flex flex-row md:flex-col items-center gap-4">
+                  <div className="text-white size-14 md:size-20 flex items-center justify-center rounded-full text-3xl font-bold bg-primary">
                     {research.usuario.nome.split("")[0]}
                   </div>
       
-                  <h1 className="text-2xl font-bold">{research.usuario.nome}</h1>
+                  <div className="flex flex-col items-start md:items-center">
+                    <h1 className="text-2xl font-bold leading-tight">{research.usuario.nome}</h1>
       
-                  <span className="text-sm text-muted-foreground">
-                    {research.usuario.email}
-                  </span>
-                </CardHeader>
+                    <span className="text-sm text-muted-foreground">
+                      {research.usuario.email}
+                    </span>
+                  </div>
+                </div>
               </Card>
             </div>
           ) : (

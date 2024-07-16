@@ -745,6 +745,14 @@ export function ExternalResearch() {
                                     
                                   <FormLabel className="relative -top-1">+60</FormLabel>
                                 </FormItem>
+
+                                <FormItem className="flex items-center gap-2">
+                                  <FormControl>
+                                    <RadioGroupItem value="Nenhuma"/>
+                                  </FormControl>
+                                    
+                                  <FormLabel className="relative -top-1">Nenhuma</FormLabel>
+                                </FormItem>
                               </RadioGroup>
                             </FormControl>
                           </FormItem>

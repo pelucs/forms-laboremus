@@ -13,7 +13,7 @@ export function ResearchOverview() {
     <div>
       <Header/>
 
-      <div className="p-7 space-y-8">
+      <div className="p-5 md:p-7 space-y-8">
         <Button 
           variant={"ghost"} 
           className="gap-3 text-lg"
