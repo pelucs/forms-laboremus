@@ -4,12 +4,12 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff, Loader } from "lucide-react";
 
 import logo100Anos from '../../public/logo-100-anos.png';
 import logo100AnosBranca from '../../public/logo-100-anos-branca.png';
-import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
 
 const formSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -21,29 +21,34 @@ type FormTypes = z.infer<typeof formSchema>;
 export function Login() {
 
   const [visiblePassword, setVisiblePassword] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormTypes>({
     resolver: zodResolver(formSchema)
   });
 
   const login = async (data: FormTypes) => {
+    setIsLoading(true);
+
     const { email, password } = data;
 
-    await api.post("/login", {
-      email,
-      password,
-    })
-    .then(res => {
-      const expireTokenInSeconds = 60 * 60 * 24 * 30;
-      document.cookie = `token=${res.data.token}; Path=/; max-age=${expireTokenInSeconds};` 
+    try {
+      const res = await api.post("/login", {
+        email,
+        password,
+      });
 
-      window.location.pathname = "/formularios"
-    })
-    .catch(err => {
+      const expireTokenInSeconds = 60 * 60 * 24 * 30;
+      document.cookie = `token=${res.data.token}; Path=/; max-age=${expireTokenInSeconds};`;
+  
+      window.location.pathname = "/formularios";
+    } catch(err: any) {
       toast({
         title: err.message
       })
-    })
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return(
@@ -110,8 +115,12 @@ export function Login() {
           Esqueceu seu acesso? entre em contato <br/> com o departamento de TI.
         </p>
 
-        <Button type="submit">
-          Efetuar Login
+        <Button 
+          type="submit"
+          disabled={isLoading}
+          className="disabled:bg-primary/50"
+        >
+          { isLoading ? <Loader className="size-4 animate-spin"/> : "Efetuar Login" }
         </Button>
       </form>
     </div>

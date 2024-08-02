@@ -56,7 +56,7 @@ export async function researchRoutes(app: FastifyInstance) {
     }
   });
 
-  // Buscando as pesquisas
+  // Buscando todas as pesquisas
   app.get("/pesquisas", async (request: FastifyRequest, reply: FastifyReply) => {
 
     const querySchema = z.object({
@@ -85,7 +85,9 @@ export async function researchRoutes(app: FastifyInstance) {
               }
             }
           },
-          take: take ? take : 20,
+          ...(take ? { 
+            take, 
+          } : {}),
           orderBy: {
             dataVisita: "desc"
           }
@@ -103,7 +105,7 @@ export async function researchRoutes(app: FastifyInstance) {
     }
   });
 
-  // Buscando as pesquisas
+  // Buscando uma pesquisa
   app.get("/pesquisa/:researchId", async (request: FastifyRequest, reply: FastifyReply) => {
 
     const paramsSchema = z.object({
@@ -136,7 +138,42 @@ export async function researchRoutes(app: FastifyInstance) {
     }
   });
 
-  // Buscando as pesquisas de um usuário
+  // Atualizando uma pesquisa
+  app.put("/pesquisa/:researchId", async (request: FastifyRequest, reply: FastifyReply) => {
+
+    const paramsSchema = z.object({
+      researchId: z.coerce.number().int()
+    });
+
+    const bodySchema = z.object({
+      observacao: z.string().nullish(),
+      pagamentoVendaPremiada: z.string().nullish(),
+    });
+  
+    try {
+      const { researchId } = paramsSchema.parse(request.params);
+      const { observacao, pagamentoVendaPremiada } = bodySchema.parse(request.body);
+
+      const research = await prisma.pesquisa.update({
+        where: {
+          id: researchId
+        },
+        data: {
+          observacao,
+          pagamentoVendaPremiada,
+        }
+      });
+  
+      return reply.status(200).send({ research });
+    } catch (error) {
+      console.error(error);
+  
+      // Tratamento de erro
+      return reply.status(500).send({ error: 'Ocorreu um erro ao atualizar a pesquisa.' });
+    }
+  });
+
+  // Buscando as pesquisas por usuário
   app.get("/pesquisas/:userId", async (request: FastifyRequest, reply: FastifyReply) => {
 
     const paramsSchema = z.object({
@@ -170,7 +207,9 @@ export async function researchRoutes(app: FastifyInstance) {
             }
           }
         },
-        take: take ? take : 20,
+        ...(take ? { 
+          take, 
+        } : {}),
         orderBy: {
           dataVisita: "desc"
         }

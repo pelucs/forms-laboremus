@@ -2,6 +2,7 @@ import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { ptBR } from "date-fns/locale"
+import { Menu } from "@/components/menu";
 import { Input } from "../components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "../components/ui/use-toast";
@@ -14,7 +15,6 @@ import { Calendar } from "../components/ui/calendar";
 import { Separator } from "../components/ui/separator";
 import { municipios } from "@/utils/uf";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IArrayMachines } from "@/utils/machines";
 import { ChevronDownIcon, Plus } from "lucide-react";
 import { Button, buttonVariants } from "../components/ui/button";
 import { DataTableFacetedFilter } from "@/components/data-table-faceted-filter";
@@ -31,7 +31,6 @@ import {
 } from "../components/ui/form";
 
 import Cookies from "js-cookie";
-import { Menu } from "@/components/menu";
 
 const formSchema = z.object({
   uf: z.string(),
@@ -48,12 +47,17 @@ const formSchema = z.object({
   observacao: z.string().nullish(),
 });
 
+interface Machine {
+  name?: string;
+  price?: number;
+  amount?: number; // Campo opcional
+}
+
 type FormTypes = z.infer<typeof formSchema>;
 
 export function ExternalResearch() {
 
   const user = getUser();
-
   // Revendas
   const [clients, setClients] = useState<{ nome: string }[]>([]);
   const [clientSelected, setClientSelected] = useState<string>("");
@@ -65,21 +69,21 @@ export function ExternalResearch() {
 
   const [name, setName] = useState<string>("");
   const [price, setPrice] = useState<number>(0);
-  const [amount, setAmount] = useState<number>(0);
+  const [amount, setAmount] = useState<number>(1);
 
-  const [competitiveMachines, setCompetitiveMachines] = useState<IArrayMachines[]>([]);
-  const [laboremusMachines, setLaboremusMachines] = useState<IArrayMachines[]>([]);
-  const [productsKey, setProductsKey] = useState<{ name: string, price: number }[]>([]);
+  const [laboremusMachines, setLaboremusMachines] = useState<Machine[]>([]);
+  const [competitiveMachines, setCompetitiveMachines] = useState<Machine[]>([]);
+  const [productsKey, setProductsKey] = useState<{ name: string; price: number }[]>([]);
 
   const addLaboremusMachines = () => {
-    if(name && price && amount){
+    if(name){
       setLaboremusMachines(
         prev => [...prev, { name, price, amount }]
       );
   
       setName("");
       setPrice(0);
-      setAmount(0);
+      setAmount(1);
     } else{
       toast({
         title: "Preencha todos os campos corretamente"
@@ -88,14 +92,14 @@ export function ExternalResearch() {
   }
 
   const addCompetitiveMachines = () => {
-    if(name && price && amount){
+    if(name){
       setCompetitiveMachines(
         prev => [...prev, { name, price, amount }]
       );
   
       setName("");
       setPrice(0);
-      setAmount(0);
+      setAmount(1);
     } else{
       toast({
         title: "Preencha todos os campos corretamente"
@@ -104,7 +108,7 @@ export function ExternalResearch() {
   }
 
   const addProductsKey = () => {
-    if(name && price){
+    if(name){
       setProductsKey(
         prev => [...prev, { name, price }]
       );
@@ -342,6 +346,7 @@ export function ExternalResearch() {
 
                                       <Input
                                         type="number"
+                                        value={price}
                                         onChange={e => setPrice(Number(e.target.value))}
                                         placeholder="Insira o valor da máquina"
                                       />
@@ -352,6 +357,7 @@ export function ExternalResearch() {
 
                                       <Input
                                         type="number"
+                                        value={amount}
                                         onChange={e => setAmount(Number(e.target.value))}
                                         placeholder="Insira a quantidade"
                                       />
@@ -366,9 +372,11 @@ export function ExternalResearch() {
                                     </DialogClose>
                                   </Button>
 
-                                  <Button onClick={addLaboremusMachines}>
-                                    Adicionar
-                                  </Button>
+                                  <DialogClose asChild>
+                                    <Button onClick={addLaboremusMachines}>
+                                      Adicionar
+                                    </Button>
+                                  </DialogClose>
                                 </div>
                               </DialogContent>
                             </DialogPortal>
@@ -379,17 +387,17 @@ export function ExternalResearch() {
                               {laboremusMachines.map(machine => (
                                 <div key={machine.name} className="p-3 space-y-2 bg-secondary rounded">
                                   <div>
-                                    <h1 className="text-xs uppercase font-semibold text-muted-foreground">Máquina:</h1>
+                                    <h1 className="text-xs font-semibold text-muted-foreground">Máquina:</h1>
                                     <span className="text-xs leading-none">{machine.name}</span>
                                   </div>
 
                                   <div>
-                                    <h1 className="text-xs uppercase font-semibold text-muted-foreground">Valor R$:</h1>
-                                    <span className="text-xs">R${machine.price.toFixed(2)}</span>
+                                    <h1 className="text-xs font-semibold text-muted-foreground">Valor R$:</h1>
+                                    <span className="text-xs">R${machine.price?.toFixed(2)}</span>
                                   </div>
 
                                   <div>
-                                    <h1 className="text-xs uppercase font-semibold text-muted-foreground">Quantidade:</h1>
+                                    <h1 className="text-xs font-semibold text-muted-foreground">Quantidade:</h1>
                                     <span className="text-xs">{machine.amount}</span>
                                   </div>
                                 </div>
@@ -469,19 +477,19 @@ export function ExternalResearch() {
                         {competitiveMachines.length > 0 && (
                           <div className="mt-2 grid grid-cols-3 gap-4">
                             {competitiveMachines.map(machine => (
-                              <div key={machine.name} className="py-2 px-3 space-y-2 bg-secondary rounded">
+                              <div key={machine.name} className="p-3 space-y-2 bg-secondary rounded">
                                 <div>
-                                  <h1 className="text-xs uppercase font-semibold text-muted-foreground">Máquina:</h1>
+                                  <h1 className="text-xs font-semibold text-muted-foreground">Máquina:</h1>
                                   <span className="text-xs leading-none">{machine.name}</span>
                                 </div>
 
                                 <div>
-                                  <h1 className="text-xs uppercase font-semibold text-muted-foreground">Valor R$:</h1>
-                                  <span className="text-xs">R${machine.price.toFixed(2)}</span>
+                                  <h1 className="text-xs font-semibold text-muted-foreground">Valor R$:</h1>
+                                  <span className="text-xs">R${machine.price?.toFixed(2)}</span>
                                 </div>
 
                                 <div>
-                                  <h1 className="text-xs uppercase font-semibold text-muted-foreground">Quantidade:</h1>
+                                  <h1 className="text-xs font-semibold text-muted-foreground">Quantidade:</h1>
                                   <span className="text-xs">{machine.amount}</span>
                                 </div>
                               </div>

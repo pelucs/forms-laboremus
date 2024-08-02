@@ -1,6 +1,6 @@
 import { api } from "@/lib/api";
 import { Button } from "./ui/button";
-import { ChevronsLeftRight } from "lucide-react";
+import { ChevronsLeftRight, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
   Command,
@@ -30,6 +30,7 @@ interface DataTableFacetedFilterProps {
 export function DataTableFacetedFilter({ clients, setClients, clientSelected, setClientSelected }: DataTableFacetedFilterProps) {
   
   const [searchTerm, setSearchTerm] = useState("");
+  const [open, setOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -52,9 +53,9 @@ export function DataTableFacetedFilter({ clients, setClients, clientSelected, se
   };
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant={"ghost"} className="w-[220px] justify-between border font-normal">
+        <Button variant={"ghost"} className="justify-between border font-normal overflow-hidden whitespace-nowrap text-ellipsis">
           {clientSelected ? clientSelected : "Selecione a revenda"}
 
           <ChevronsLeftRight className="size-3 rotate-90 text-muted-foreground"/>
@@ -62,12 +63,37 @@ export function DataTableFacetedFilter({ clients, setClients, clientSelected, se
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
         <Command>
-          <CommandInput value={searchTerm} onValueChange={setSearchTerm}/>
+          <div className="relative">
+            <CommandInput 
+              value={searchTerm} 
+              onValueChange={setSearchTerm}
+              className="pr-6"
+            />
+
+            <Button 
+              size="icon" 
+              className="size-5 absolute top-[10px] right-2"
+              onClick={() => {
+                setOpen(false);
+                setClientSelected(searchTerm);
+              }}
+            >
+              <Plus className="size-4"/>
+            </Button>
+          </div>
+
           <CommandList>
             <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
             <CommandGroup>
               {clients.map((client, i) => (
-                <CommandItem onSelect={(e) => setClientSelected(e)} key={i}>
+                <CommandItem  
+                  key={i}
+                  className="cursor-pointer"
+                  onSelect={(e) => {
+                    setOpen(false);
+                    setClientSelected(e)
+                  }}
+                >
                   {client.nome}
                 </CommandItem>
               ))}

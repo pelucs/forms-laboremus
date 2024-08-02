@@ -1,3 +1,5 @@
+import Cookies from "js-cookie";
+
 import { api } from "@/lib/api";
 import { Card } from "../ui/card";
 import { ptBR } from "date-fns/locale";
@@ -7,8 +9,16 @@ import { Separator } from "../ui/separator";
 import { IResearch } from "@/utils/researchs-types";
 import { formatReal } from "@/helpers/format-currency";
 import { useEffect, useState } from "react";
-
-import Cookies from "js-cookie";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Button } from "../ui/button";
+import { LoaderCircle, MoreVertical, Pencil } from "lucide-react";
+import { PopoverPortal } from "@radix-ui/react-popover";
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "../ui/use-toast";
 
 interface ResearchCardProps {
   idResearch: string;
@@ -34,10 +44,25 @@ async function getRecentResearch(idResearch: string, setIsLoading: (newState: bo
   }
 }
 
+const formSchema = z.object({
+  pagamentoVendaPremiada: z.string().nullish(),
+  observacao: z.string().nullish(),
+});
+
+type FormTypes = z.infer<typeof formSchema>;
+
 export function ResearchCard({ idResearch }: ResearchCardProps) {
+
+  const { register, handleSubmit } = useForm<FormTypes>({
+    resolver: zodResolver(formSchema)
+  });
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [research, setResearch] = useState<IResearch>();
+
+  const [editMode, setEditMode] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(false);
+  const [isLoadingEdit, setIsLoadingEdit] = useState<boolean>(false);
 
   useEffect(() => {
     const data = getRecentResearch(idResearch, setIsLoading);
@@ -49,6 +74,40 @@ export function ResearchCard({ idResearch }: ResearchCardProps) {
     .catch(err => console.log(err))
   }, []);
 
+  const updateData = async (data: FormTypes) => {
+    const token = Cookies.get("token");
+
+    if(token) {
+      setIsLoadingEdit(true);
+  
+      const { observacao, pagamentoVendaPremiada } = data;
+  
+      if(observacao || pagamentoVendaPremiada) {
+        try {
+          await api.put(`/pesquisa/${research?.id}`, {
+            pagamentoVendaPremiada: (pagamentoVendaPremiada === "não" || pagamentoVendaPremiada === "Não"  || pagamentoVendaPremiada === "nao" || pagamentoVendaPremiada === "Nao") ? "false" : "true",
+            observacao,
+          }, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+  
+          toast({
+            title: "Alterações salvas!"
+          });
+  
+          setTimeout(() => window.location.reload(), 2000);
+        } catch(err) {
+          console.log(err)
+        } finally {
+          setIsLoadingEdit(false);
+        }
+      }
+    }
+
+  }
+
   return(
     <div className="">
       <h1 className="text-3xl font-bold">Pesquisa externa</h1>
@@ -56,9 +115,45 @@ export function ResearchCard({ idResearch }: ResearchCardProps) {
       <div>
         {!isLoading ? (
           research ? (
-            <div className="mt-5 flex flex-col-reverse md:flex-row items-start gap-5">
-              <Card className="flex-1 p-5 md:p-10 bg-secondary/50">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+            <form onSubmit={handleSubmit(updateData)} className="mt-5 flex flex-col-reverse md:flex-row items-start gap-5">
+              <Card className="w-full p-5 md:p-10 relative bg-secondary/50">
+                {research.tipoDaPesquisa === "revenda" && (
+                  <div className="absolute top-4 right-4">
+                    <Popover onOpenChange={setOpen} open={open}>
+                      <Button 
+                        asChild 
+                        size="icon" 
+                        type="button"
+                        className="size-8" 
+                        variant="secondary"
+                      >
+                        <PopoverTrigger>
+                          <MoreVertical className="size-4"/>
+                        </PopoverTrigger>
+                      </Button>
+
+                      <PopoverPortal>
+                        <PopoverContent align="end" className="w-40 p-1">
+                          <Button 
+                            type="button"
+                            variant="ghost" 
+                            onClick={() => {
+                              setOpen(false);
+                              setEditMode(true)
+                            }} 
+                            className="w-full justify-start gap-2 px-2"
+                          >
+                            <Pencil className="size-4"/>
+
+                            Editar
+                          </Button>  
+                        </PopoverContent>  
+                      </PopoverPortal>  
+                    </Popover>
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
                   <div>
                     <h1 className="text-sm text-muted-foreground leading-tight">ID da pesquisa</h1>
                     <span className="font-medium">#{idResearch}</span>
@@ -116,9 +211,19 @@ export function ResearchCard({ idResearch }: ResearchCardProps) {
                   {research.tipoDaPesquisa === "revenda" && (
                     <div>
                       <h1 className="text-sm text-muted-foreground leading-tight">Houve pagamento?</h1>
-                      <span className="font-medium">
-                        {research.pagamentoVendaPremiada === "true" ? "Sim" : "Não"}
-                      </span>
+
+                      {editMode ? (
+                        <Input
+                          className="mt-2"
+                          placeholder="Sua resposta"
+                          {...register("pagamentoVendaPremiada")}
+                          defaultValue={research.pagamentoVendaPremiada === "true" ? "Sim" : "Não"}
+                        />
+                      ) : (
+                        <span className="font-medium">
+                          {research.pagamentoVendaPremiada === "true" ? "Sim" : "Não"}
+                        </span>
+                      )}
                     </div>
                   )}
       
@@ -157,8 +262,29 @@ export function ResearchCard({ idResearch }: ResearchCardProps) {
                   {research.observacao && (
                     <div>
                       <h1 className="text-sm text-muted-foreground leading-tight">Observação</h1>
-                      <span className="font-medium">{research.observacao}</span>
+                      {editMode ? (
+                        <Textarea
+                          className="mt-2 h-40"
+                          placeholder="Sua resposta"
+                          defaultValue={research.observacao}
+                          {...register("observacao")}
+                        />
+                      ) : (
+                        <span className="font-medium">
+                          {research.observacao}
+                        </span>
+                      )}
                     </div>
+                  )}
+
+                  {editMode && (
+                    <Button
+                      type="submit"
+                      disabled={isLoadingEdit}
+                      className="w-[180px] disabled:bg-primary/50"
+                    >
+                      {isLoadingEdit ? <LoaderCircle className="size-4 animate-spin"/> : "Enviar alterações"}
+                    </Button>
                   )}
       
                   <Separator/>
@@ -268,7 +394,7 @@ export function ResearchCard({ idResearch }: ResearchCardProps) {
                   </div>
                 </div>
               </Card>
-            </div>
+            </form>
           ) : (
             <div>
               Nenhuma pesquisa encontrada com esse id #{idResearch}

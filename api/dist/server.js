@@ -348,7 +348,9 @@ async function authRoutes(app2) {
 var import_jwt = __toESM(require("@fastify/jwt"));
 var app = (0, import_fastify.default)();
 app.register(import_cors.fastifyCors, {
-  origin: "*"
+  origin: ["http://intranet.laboremus.com.br"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 });
 app.register(import_jwt.default, {
   secret: `${process.env.SECRET_JWT}`
