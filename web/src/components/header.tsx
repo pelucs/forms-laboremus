@@ -2,8 +2,8 @@ import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import { getUser } from "@/lib/auth";
 import { Separator } from "./ui/separator";
-import { LayoutGrid, LogOut } from "lucide-react";
 import { ButtonTheme } from "./button-theme";
+import { LayoutGrid, LogOut } from "lucide-react";
 
 import logoDark from "../../public/laboremus-dark.png";
 import logoLight from "../../public/laboremus-light.png";

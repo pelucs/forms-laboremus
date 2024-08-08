@@ -23,8 +23,8 @@ import { Table,
 import * as XLSX from 'xlsx'
 import Cookies from "js-cookie";
 
-import { formatDate } from "@/helpers/format-date";
 import { toast } from "@/components/ui/use-toast";
+import { formatDate } from "@/helpers/format-date";
 import { formatJson } from "../../../helpers/format-data";
 
 async function getResearchs(date: DateRange | undefined, setIsLoading: (newState: boolean) => void) {
@@ -52,8 +52,13 @@ async function getResearchs(date: DateRange | undefined, setIsLoading: (newState
 export function Researchs() {
 
   const [date, setDate] = useState<DateRange | undefined>({
-    from: subDays(new Date(), (new Date().getDate() - 1)),
-    to: new Date(),
+    from: new Date(
+      subDays(new Date(), (new Date().getDate() - 1))
+      .setHours(0, 0, 0, 0)
+    ),
+    to: new Date(
+      new Date().setHours(23, 59, 59, 999)
+    ),
   });
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -61,6 +66,7 @@ export function Researchs() {
 
   const [search, setSearch] = useState<string>("");
 
+  // Resgata as pesquisas
   useEffect(() => {
     const data = getResearchs(date, setIsLoading);
     
@@ -143,36 +149,21 @@ export function Researchs() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="whitespace-nowrap">Data</TableHead>
-                  <TableHead className="whitespace-nowrap">Nome</TableHead>
+                  <TableHead className="w-6"></TableHead>
+                  <TableHead className="w-32 whitespace-nowrap">Data</TableHead>
+                  <TableHead className="w-40 whitespace-nowrap">Nome</TableHead>
                   <TableHead className="whitespace-nowrap">Tipo da pesquisa</TableHead>
-                  <TableHead className="whitespace-nowrap">Loja</TableHead>
                   <TableHead className="whitespace-nowrap">UF</TableHead>
-                  <TableHead className="whitespace-nowrap">Reposição</TableHead>
-                  <TableHead className="text-right"></TableHead>
+                  <TableHead className="w-32 whitespace-nowrap">Treinamento</TableHead>
+                  <TableHead className="w-32 whitespace-nowrap">Pagamento</TableHead>
+                  <TableHead className="w-44 whitespace-nowrap">Merchandising</TableHead>
+                  <TableHead className="whitespace-nowrap">Loja</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredResearchs.length > 0 ? (
                   filteredResearchs.map((research) => (
                     <TableRow key={research.id}>
-                      <TableCell className="whitespace-nowrap">
-                        {format(new Date(research.dataVisita), "dd' de 'MMM', 'yy", { locale: ptBR })}
-                      </TableCell>
-
-                      <TableCell className="font-medium whitespace-nowrap">{research.usuario.nome}</TableCell>
-  
-                      <TableCell>
-                        {research.tipoDaPesquisa === "prospeccao" ? "Prospecção" : "Revenda"}
-                      </TableCell>
-  
-                      <TableCell className="whitespace-nowrap">{research.cliente}</TableCell>
-                      <TableCell>{research.uf}</TableCell>
-  
-                      <TableCell>
-                        {research.reposicao === "true" ? "Sim" : "Não"}
-                      </TableCell>
-  
                       <TableCell className="text-right">
                         <Button 
                           asChild 
@@ -185,6 +176,32 @@ export function Researchs() {
                           </Link>
                         </Button>
                       </TableCell>
+
+                      <TableCell className="whitespace-nowrap">
+                        {format(new Date(research.dataVisita), "dd' de 'MMM', 'yy", { locale: ptBR })}
+                      </TableCell>
+
+                      <TableCell className="font-bold whitespace-nowrap">{research.usuario.nome}</TableCell>
+  
+                      <TableCell>
+                        {research.tipoDaPesquisa === "prospeccao" ? "Prospecção" : "Revenda"}
+                      </TableCell>
+  
+                      <TableCell>{research.uf}</TableCell>
+  
+                      <TableCell>
+                        {research.treinamento === "true" ? "Sim" : "Não"}
+                      </TableCell>
+
+                      <TableCell>
+                        {research.pagamentoVendaPremiada === "true" ? "Sim" : "Não"}
+                      </TableCell>
+
+                      <TableCell>
+                        {research.merchandising === "true" ? "Sim (Antes/Depois)" : "Não"}
+                      </TableCell>
+
+                      <TableCell className="whitespace-nowrap">{research.cliente}</TableCell>
                     </TableRow>
                   ))
                 ) : (
@@ -230,44 +247,6 @@ export function Researchs() {
               </div>
             )}
           </div>
-
-          {/* <div className="flex items-center gap-5">
-            <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-              Página 1 de 5
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-              >
-                <span className="sr-only">Go to first page</span>
-                <DoubleArrowLeftIcon className="h-4 w-4" />
-              </Button>
-
-              <Button
-                variant="outline"
-                className="h-8 w-8 p-0"
-              >
-                <span className="sr-only">Go to previous page</span>
-                <ChevronLeftIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="h-8 w-8 p-0"
-              >
-                <span className="sr-only">Go to next page</span>
-                <ChevronRightIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-              >
-                <span className="sr-only">Go to last page</span>
-                <DoubleArrowRightIcon className="h-4 w-4" />
-              </Button>
-            </div>
-          </div> */}
         </div>
       </div>
     </div>

@@ -11,7 +11,7 @@ import { formatReal } from "@/helpers/format-currency";
 import { useEffect, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
-import { LoaderCircle, MoreVertical, Pencil } from "lucide-react";
+import { Loader, LoaderCircle, MoreVertical, Pencil, Trash } from "lucide-react";
 import { PopoverPortal } from "@radix-ui/react-popover";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
@@ -19,6 +19,8 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "../ui/use-toast";
+import { Dialog, DialogClose, DialogContent, DialogPortal, DialogTrigger } from "../ui/dialog";
+import { useLocation, useNavigate, useNavigation, useRoutes } from "react-router-dom";
 
 interface ResearchCardProps {
   idResearch: string;
@@ -46,12 +48,15 @@ async function getRecentResearch(idResearch: string, setIsLoading: (newState: bo
 
 const formSchema = z.object({
   pagamentoVendaPremiada: z.string().nullish(),
+  treinamento: z.string().nullish(),
   observacao: z.string().nullish(),
 });
 
 type FormTypes = z.infer<typeof formSchema>;
 
 export function ResearchCard({ idResearch }: ResearchCardProps) {
+
+  const navigate = useNavigate();
 
   const { register, handleSubmit } = useForm<FormTypes>({
     resolver: zodResolver(formSchema)
@@ -63,6 +68,7 @@ export function ResearchCard({ idResearch }: ResearchCardProps) {
   const [editMode, setEditMode] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
   const [isLoadingEdit, setIsLoadingEdit] = useState<boolean>(false);
+  const [isLoadingDelete, setIsLoadingDelete] = useState<boolean>(false);
 
   useEffect(() => {
     const data = getRecentResearch(idResearch, setIsLoading);
@@ -74,18 +80,49 @@ export function ResearchCard({ idResearch }: ResearchCardProps) {
     .catch(err => console.log(err))
   }, []);
 
-  const updateData = async (data: FormTypes) => {
+  // Deletar uma pesquisa
+  const deleteResearch = async () => {
+    setIsLoadingDelete(true);
+    
     const token = Cookies.get("token");
+    
+    if(token) { 
+      try {
+        await api.delete(`/pesquisa/${idResearch}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
 
+        toast({
+          title: "Pesquisa deletada com sucesso!"
+        });
+
+        //Back page
+        navigate(-1);
+      } catch(err) {
+        console.log(err)
+      } finally {
+        setIsLoadingDelete(false);
+      }
+    }
+  }
+
+  // Atualizar uma pesquisa
+  const updateData = async (data: FormTypes) => {
+    setIsLoadingEdit(true);
+    
+    const token = Cookies.get("token");
+    
     if(token) {
-      setIsLoadingEdit(true);
   
-      const { observacao, pagamentoVendaPremiada } = data;
+      const { observacao, treinamento, pagamentoVendaPremiada } = data;
   
-      if(observacao || pagamentoVendaPremiada) {
+      if(observacao || pagamentoVendaPremiada || treinamento) {
         try {
           await api.put(`/pesquisa/${research?.id}`, {
             pagamentoVendaPremiada: (pagamentoVendaPremiada === "não" || pagamentoVendaPremiada === "Não"  || pagamentoVendaPremiada === "nao" || pagamentoVendaPremiada === "Nao") ? "false" : "true",
+            treinamento: (treinamento === "não" || treinamento === "Não"  || treinamento === "nao" || treinamento === "Nao") ? "false" : "true",
             observacao,
           }, {
             headers: {
@@ -97,7 +134,7 @@ export function ResearchCard({ idResearch }: ResearchCardProps) {
             title: "Alterações salvas!"
           });
   
-          setTimeout(() => window.location.reload(), 2000);
+          setTimeout(() => window.location.reload(), 1700);
         } catch(err) {
           console.log(err)
         } finally {
@@ -105,7 +142,6 @@ export function ResearchCard({ idResearch }: ResearchCardProps) {
         }
       }
     }
-
   }
 
   return(
@@ -117,23 +153,23 @@ export function ResearchCard({ idResearch }: ResearchCardProps) {
           research ? (
             <form onSubmit={handleSubmit(updateData)} className="mt-5 flex flex-col-reverse md:flex-row items-start gap-5">
               <Card className="w-full p-5 md:p-10 relative bg-secondary/50">
-                {research.tipoDaPesquisa === "revenda" && (
-                  <div className="absolute top-4 right-4">
-                    <Popover onOpenChange={setOpen} open={open}>
-                      <Button 
-                        asChild 
-                        size="icon" 
-                        type="button"
-                        className="size-8" 
-                        variant="secondary"
-                      >
-                        <PopoverTrigger>
-                          <MoreVertical className="size-4"/>
-                        </PopoverTrigger>
-                      </Button>
+                <div className="absolute top-4 right-4">
+                  <Popover onOpenChange={setOpen} open={open}>
+                    <Button 
+                      asChild 
+                      size="icon" 
+                      type="button"
+                      className="size-8" 
+                      variant="secondary"
+                    >
+                      <PopoverTrigger>
+                        <MoreVertical className="size-4"/>
+                      </PopoverTrigger>
+                    </Button>
 
-                      <PopoverPortal>
-                        <PopoverContent align="end" className="w-40 p-1">
+                    <PopoverPortal>
+                      <PopoverContent align="end" className="w-40 p-1">
+                        {research.tipoDaPesquisa === "revenda" && (
                           <Button 
                             type="button"
                             variant="ghost" 
@@ -146,12 +182,57 @@ export function ResearchCard({ idResearch }: ResearchCardProps) {
                             <Pencil className="size-4"/>
 
                             Editar
-                          </Button>  
-                        </PopoverContent>  
-                      </PopoverPortal>  
-                    </Popover>
-                  </div>
-                )}
+                          </Button> 
+                        )} 
+
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button 
+                              type="button"
+                              variant="ghost" 
+                              className="w-full justify-start gap-2 px-2"
+                            >
+                              <Trash className="size-4"/>
+
+                              Deletar
+                            </Button>  
+                          </DialogTrigger>
+
+                          <DialogPortal>
+                            <DialogContent>
+                              <div className="flex flex-col gap-4">
+                                <h1 className="text-2xl font-bold">
+                                  Deseja excluir a pesquisa?
+                                </h1>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                  <Button 
+                                    disabled={isLoadingDelete}
+                                    variant="destructive"
+                                    onClick={deleteResearch} 
+                                    className="disabled:opacity-50"
+                                  >
+                                    {isLoadingDelete ? (
+                                      <Loader className="size-4 animate-spin"/>
+                                    ) : (
+                                      "Deletar"
+                                    )}
+                                  </Button>
+
+                                  <Button asChild variant="secondary" className="shadow">
+                                    <DialogClose>
+                                      Cancelar
+                                    </DialogClose>
+                                  </Button>
+                                </div>
+                              </div>
+                            </DialogContent> 
+                          </DialogPortal>  
+                        </Dialog> 
+                      </PopoverContent>  
+                    </PopoverPortal>  
+                  </Popover>
+                </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
                   <div>
@@ -186,9 +267,19 @@ export function ResearchCard({ idResearch }: ResearchCardProps) {
                   {research.tipoDaPesquisa === "revenda" && (  
                     <div>
                       <h1 className="text-sm text-muted-foreground leading-tight">Houve treinamento na equipe de vendas?</h1>
-                      <span className="font-medium">
-                        {research.treinamento === "true" ? "Sim" : "Não"}
-                      </span>
+                      
+                      {editMode ? (
+                        <Input
+                          className="mt-2"
+                          placeholder="Sua resposta"
+                          {...register("treinamento")}
+                          defaultValue={research.treinamento === "true" ? "Sim" : "Não"}
+                        />
+                      ) : (
+                        <span className="font-medium">
+                          {research.treinamento === "true" ? "Sim" : "Não"}
+                        </span>
+                      )}
                     </div>
                   )}
 
@@ -228,9 +319,9 @@ export function ResearchCard({ idResearch }: ResearchCardProps) {
                   )}
       
                   <div>
-                    <h1 className="text-sm text-muted-foreground leading-tight">Foi apresentado material de merchandising?</h1>
+                    <h1 className="text-sm text-muted-foreground leading-tight">Foi aplicado material de merchandising?</h1>
                     <span className="font-medium">
-                      {research.merchandising === "true" ? "Sim" : "Não"}
+                      {research.merchandising === "true" ? "Sim (Antes/Depois)" : "Não"}
                     </span>
                   </div>
       

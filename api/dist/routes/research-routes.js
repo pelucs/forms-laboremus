@@ -99,7 +99,9 @@ async function researchRoutes(app) {
               }
             }
           },
-          take: take ? take : 20,
+          ...take ? {
+            take
+          } : {},
           orderBy: {
             dataVisita: "desc"
           }
@@ -138,6 +140,32 @@ async function researchRoutes(app) {
       return reply.status(500).send({ error: "Ocorreu um erro ao buscar as pesquisas." });
     }
   });
+  app.put("/pesquisa/:researchId", async (request, reply) => {
+    const paramsSchema = import_zod.z.object({
+      researchId: import_zod.z.coerce.number().int()
+    });
+    const bodySchema = import_zod.z.object({
+      observacao: import_zod.z.string().nullish(),
+      pagamentoVendaPremiada: import_zod.z.string().nullish()
+    });
+    try {
+      const { researchId } = paramsSchema.parse(request.params);
+      const { observacao, pagamentoVendaPremiada } = bodySchema.parse(request.body);
+      const research = await prisma.pesquisa.update({
+        where: {
+          id: researchId
+        },
+        data: {
+          observacao,
+          pagamentoVendaPremiada
+        }
+      });
+      return reply.status(200).send({ research });
+    } catch (error) {
+      console.error(error);
+      return reply.status(500).send({ error: "Ocorreu um erro ao atualizar a pesquisa." });
+    }
+  });
   app.get("/pesquisas/:userId", async (request, reply) => {
     const paramsSchema = import_zod.z.object({
       userId: import_zod.z.string().uuid()
@@ -166,7 +194,9 @@ async function researchRoutes(app) {
             }
           }
         },
-        take: take ? take : 20,
+        ...take ? {
+          take
+        } : {},
         orderBy: {
           dataVisita: "desc"
         }

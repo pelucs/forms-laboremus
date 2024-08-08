@@ -57,7 +57,17 @@ export function DatePicker({
             mode="range"
             defaultMonth={date?.from}
             selected={date}
-            onSelect={setDate}
+            onSelect={event => {
+              const adjustedFrom = event?.from ? new Date(event.from.setHours(0, 0, 0, 0)) : undefined;
+              const adjustedTo = event?.to ? new Date(event.to.setHours(23, 59, 59, 999)) : undefined;
+            
+              setDate({ 
+                from: adjustedFrom, 
+                to: adjustedTo 
+              });
+            
+              localStorage.setItem("research_date", JSON.stringify({ from: adjustedFrom, to: adjustedTo }));
+            }}
             numberOfMonths={2}
             locale={ptBR}
           />

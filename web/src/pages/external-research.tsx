@@ -15,7 +15,7 @@ import { Calendar } from "../components/ui/calendar";
 import { Separator } from "../components/ui/separator";
 import { municipios } from "@/utils/uf";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronDownIcon, Plus } from "lucide-react";
+import { ChevronDownIcon, Loader, Plus } from "lucide-react";
 import { Button, buttonVariants } from "../components/ui/button";
 import { DataTableFacetedFilter } from "@/components/data-table-faceted-filter";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
@@ -58,6 +58,9 @@ type FormTypes = z.infer<typeof formSchema>;
 export function ExternalResearch() {
 
   const user = getUser();
+
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
   // Revendas
   const [clients, setClients] = useState<{ nome: string }[]>([]);
   const [clientSelected, setClientSelected] = useState<string>("");
@@ -127,6 +130,8 @@ export function ExternalResearch() {
   });
 
   async function onSubmit(values: FormTypes) {
+    setIsLoading(true);
+
     const token = Cookies.get("token");
 
     if(user) {
@@ -139,31 +144,32 @@ export function ExternalResearch() {
         conPisoDeVendas: JSON.stringify(competitiveMachines),
         cliente: clientSelected ? clientSelected : values.cliente,
       }
-  
-      await api.post("/pesquisa", {
-        uf: research.uf,
-        usuarioId: research.usuarioId,
-        dataVisita: research.dataVisita,
-        tipoDaPesquisa: research.tipoDaPesquisa,
-        cliente: research.cliente,
-        labPisoDeVendas: research.labPisoDeVendas,
-        conPisoDeVendas: research.conPisoDeVendas,
-        treinamento: research.treinamento,
-        vendaPremiada: research.vendaPremiada,
-        pagamentoVendaPremiada: research.pagamentoVendaPremiada,
-        merchandising: research.merchandising,
-        reposicao: research.reposicao,
-        prazoEntregaCon: research.prazoEntregaCon,
-        campanhaDeVendaCon: research.campanhaDeVendaCon,
-        produtoChave: research.produtoChave,
-        linhasDeCredito: research.linhasDeCredito,
-        observacao: research.observacao,
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
-      .then(res => {
+
+      try {
+        const res = await api.post("/pesquisa", {
+          uf: research.uf,
+          usuarioId: research.usuarioId,
+          dataVisita: research.dataVisita,
+          tipoDaPesquisa: research.tipoDaPesquisa,
+          cliente: research.cliente,
+          labPisoDeVendas: research.labPisoDeVendas,
+          conPisoDeVendas: research.conPisoDeVendas,
+          treinamento: research.treinamento,
+          vendaPremiada: research.vendaPremiada,
+          pagamentoVendaPremiada: research.pagamentoVendaPremiada,
+          merchandising: research.merchandising,
+          reposicao: research.reposicao,
+          prazoEntregaCon: research.prazoEntregaCon,
+          campanhaDeVendaCon: research.campanhaDeVendaCon,
+          produtoChave: research.produtoChave,
+          linhasDeCredito: research.linhasDeCredito,
+          observacao: research.observacao,
+        }, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+
         toast({
           title: "Pesquisa registrada com sucesso!",
           description: (
@@ -172,9 +178,15 @@ export function ExternalResearch() {
             </span>
           )
         })
-
-        setTimeout(() => window.location.reload(), 2000);
-      })
+        setTimeout(() => window.location.reload(), 1700);
+      } catch (err) {
+        toast({
+          title: "Algo deu errado!",
+          description: "Verifique se a VPN está conectada ou atualize a página!"
+        })
+      } finally {
+        setIsLoading(false);
+      }
     }
   }
 
@@ -610,7 +622,7 @@ export function ExternalResearch() {
                         name="merchandising"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Foi apresentado material de merchandising?</FormLabel>
+                            <FormLabel>Foi aplicado material de merchandising?</FormLabel>
 
                             <FormControl>
                               <RadioGroup
@@ -724,10 +736,10 @@ export function ExternalResearch() {
                               >
                                 <FormItem className="flex items-center gap-2">
                                   <FormControl>
-                                    <RadioGroupItem value="0-15"/>
+                                    <RadioGroupItem value="1-15"/>
                                   </FormControl>
                                     
-                                  <FormLabel className="relative -top-1">0-15</FormLabel>
+                                  <FormLabel className="relative -top-1">1-15</FormLabel>
                                 </FormItem>
 
                                 <FormItem className="flex items-center gap-2">
@@ -930,9 +942,10 @@ export function ExternalResearch() {
 
               <Button 
                 type="submit"
-                disabled={typeResearch ? false : true}
+                disabled={(typeResearch && !isLoading) ? false : true}
+                className="w-40 disabled:opacity-50"
               >
-                Enviar formulário
+                { isLoading ? <Loader className="size-4 animate-spin"/> : "Enviar formulário"}
               </Button>
             </form>
           </Form>

@@ -54,8 +54,13 @@ async function getResearchs(date: DateRange | undefined, setIsLoading: (newState
 export function ResearchByUser() {
 
   const [date, setDate] = useState<DateRange | undefined>({
-    from: subDays(new Date(), (new Date().getDate() - 1)),
-    to: new Date(),
+    from: new Date(
+      subDays(new Date(), (new Date().getDate() - 1))
+      .setHours(0, 0, 0, 0)
+    ),
+    to: new Date(
+      new Date().setHours(23, 59, 59, 999)
+    ),
   });
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -109,38 +114,21 @@ export function ResearchByUser() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="whitespace-nowrap">ID</TableHead>
-                    <TableHead className="whitespace-nowrap">Nome</TableHead>
-                    <TableHead className="whitespace-nowrap">Tipo da pesquisa</TableHead>
+                    <TableHead className="w-6"></TableHead>
+                    <TableHead className="w-16 whitespace-nowrap">Id</TableHead>
+                    <TableHead className="w-32 whitespace-nowrap">Data</TableHead>
+                    <TableHead className="w-40 whitespace-nowrap">Tipo da pesquisa</TableHead>
+                    <TableHead className="w-24 whitespace-nowrap">UF</TableHead>
+                    <TableHead className="w-32 whitespace-nowrap">Treinamento</TableHead>
+                    <TableHead className="w-32 whitespace-nowrap">Pagamento</TableHead>
+                    <TableHead className="w-44 whitespace-nowrap">Merchandising</TableHead>
                     <TableHead className="whitespace-nowrap">Loja</TableHead>
-                    <TableHead className="whitespace-nowrap">UF</TableHead>
-                    <TableHead className="whitespace-nowrap">Reposição</TableHead>
-                    <TableHead className="whitespace-nowrap">Data</TableHead>
-                    <TableHead className="text-right"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredResearchs.length > 0 ? (
                     filteredResearchs.map((research) => (
                       <TableRow key={research.id}>
-                        <TableCell>{research.id}</TableCell>
-                        <TableCell className="font-medium whitespace-nowrap">{research.usuario.nome}</TableCell>
-    
-                        <TableCell>
-                          {research.tipoDaPesquisa === "prospeccao" ? "Prospecção" : "Revenda"}
-                        </TableCell>
-    
-                        <TableCell className="whitespace-nowrap">{research.cliente}</TableCell>
-                        <TableCell>{research.uf}</TableCell>
-    
-                        <TableCell>
-                          {research.reposicao === "true" ? "Sim" : "Não"}
-                        </TableCell>
-    
-                        <TableCell className="whitespace-nowrap">
-                          {format(new Date(research.dataVisita), "dd' de 'MMM', 'yy", { locale: ptBR })}
-                        </TableCell>
-    
                         <TableCell className="text-right">
                           <Button 
                             asChild 
@@ -152,6 +140,38 @@ export function ResearchByUser() {
                               <Eye className="size-3"/>
                             </Link>
                           </Button>
+                        </TableCell>
+
+                        <TableCell className="whitespace-nowrap">
+                          #{research.id}
+                        </TableCell>
+    
+                        <TableCell className="whitespace-nowrap">
+                          {format(new Date(research.dataVisita), "dd' de 'MMM', 'yy", { locale: ptBR })}
+                        </TableCell>
+
+                        <TableCell>
+                          {research.tipoDaPesquisa === "prospeccao" ? "Prospecção" : "Revenda"}
+                        </TableCell>
+    
+                        <TableCell>
+                          {research.uf}
+                        </TableCell>
+    
+                        <TableCell>
+                          {research.treinamento === "true" ? "Sim" : "Não"}
+                        </TableCell>
+
+                        <TableCell>
+                          {research.pagamentoVendaPremiada === "true" ? "Sim" : "Não"}
+                        </TableCell>
+
+                        <TableCell>
+                          {research.merchandising === "true" ? "Sim (Antes/Depois)" : "Não"}
+                        </TableCell>
+    
+                        <TableCell className="whitespace-nowrap">
+                          {research.cliente}
                         </TableCell>
                       </TableRow>
                     ))

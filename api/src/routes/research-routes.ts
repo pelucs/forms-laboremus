@@ -56,6 +56,27 @@ export async function researchRoutes(app: FastifyInstance) {
     }
   });
 
+  // Deletar uma pesquisa
+  app.delete("/pesquisa/:researchId", async (request: FastifyRequest, reply: FastifyReply) => {
+    const paramsSchema = z.object({
+      researchId: z.coerce.number(),
+    });
+
+    const { researchId } = paramsSchema.parse(request.params);
+
+    try {
+      await prisma.pesquisa.delete({
+        where: {
+          id: researchId
+        }
+      });
+
+      return reply.status(204).send({ message: "Deletado com sucesso!" });
+    } catch(err){
+      return reply.status(400).send({ message: "Algo deu errado" })
+    }
+  });
+
   // Buscando todas as pesquisas
   app.get("/pesquisas", async (request: FastifyRequest, reply: FastifyReply) => {
 
@@ -147,12 +168,13 @@ export async function researchRoutes(app: FastifyInstance) {
 
     const bodySchema = z.object({
       observacao: z.string().nullish(),
+      treinamento: z.string().nullish(),
       pagamentoVendaPremiada: z.string().nullish(),
     });
   
     try {
       const { researchId } = paramsSchema.parse(request.params);
-      const { observacao, pagamentoVendaPremiada } = bodySchema.parse(request.body);
+      const { observacao, treinamento, pagamentoVendaPremiada } = bodySchema.parse(request.body);
 
       const research = await prisma.pesquisa.update({
         where: {
@@ -160,6 +182,7 @@ export async function researchRoutes(app: FastifyInstance) {
         },
         data: {
           observacao,
+          treinamento,
           pagamentoVendaPremiada,
         }
       });
@@ -227,19 +250,11 @@ export async function researchRoutes(app: FastifyInstance) {
 
   // Buscando todos os produtos chaves
   app.get("/produto-chave", async (request: FastifyRequest, reply: FastifyReply) => {
-
-    const querySchema = z.object({
-      query: z.coerce.number().nullish(),
-    });
-
-    const { query } = querySchema.parse(request.query);
-
     const productsKey = await prisma.produtoChave.findMany({
       select: {
         nome: true,
         preco: true,
-      },
-      take: query ? query : 20
+      }
     });
 
     return reply.status(200).send({ productsKey });
