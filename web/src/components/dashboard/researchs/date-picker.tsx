@@ -30,33 +30,39 @@ export function DatePicker({
         <PopoverTrigger asChild>
           <Button
             id="date"
-            variant={"outline"}
+            size="icon"
+            variant="outline"
             className={cn(
-              "w-[250px] justify-start text-left font-normal",
+              "md:px-4 md:w-[250px] justify-center md:justify-start text-left font-normal gap-2",
               !date && "text-muted-foreground"
             )}
           >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {date?.from ? (
-              date.to ? (
-                <>
-                  {format(date.from, "LLL dd, y")} -{" "}
-                  {format(date.to, "LLL dd, y")}
-                </>
+            <CalendarIcon className="size-4" />
+
+            <div className="hidden md:flex">
+              {date?.from ? (
+                date.to ? (
+                  <>
+                    {format(date.from, "LLL dd, y")} -{" "}
+                    {format(date.to, "LLL dd, y")}
+                  </>
+                ) : (
+                  format(date.from, "LLL dd, y")
+                )
               ) : (
-                format(date.from, "LLL dd, y")
-              )
-            ) : (
-              <span>Escolha uma data</span>
-            )}
+                <span>Escolha uma data</span>
+              )}
+            </div>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             initialFocus
             mode="range"
-            defaultMonth={date?.from}
+            locale={ptBR}
             selected={date}
+            numberOfMonths={2}
+            defaultMonth={date?.from}
             onSelect={event => {
               const adjustedFrom = event?.from ? new Date(event.from.setHours(0, 0, 0, 0)) : undefined;
               const adjustedTo = event?.to ? new Date(event.to.setHours(23, 59, 59, 999)) : undefined;
@@ -68,8 +74,7 @@ export function DatePicker({
             
               localStorage.setItem("research_date", JSON.stringify({ from: adjustedFrom, to: adjustedTo }));
             }}
-            numberOfMonths={2}
-            locale={ptBR}
+            
           />
         </PopoverContent>
       </Popover>
