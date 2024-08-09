@@ -75,6 +75,22 @@ async function researchRoutes(app) {
       return reply.status(400).send({ message: "Algo deu errado" });
     }
   });
+  app.delete("/pesquisa/:researchId", async (request, reply) => {
+    const paramsSchema = import_zod.z.object({
+      researchId: import_zod.z.coerce.number()
+    });
+    const { researchId } = paramsSchema.parse(request.params);
+    try {
+      await prisma.pesquisa.delete({
+        where: {
+          id: researchId
+        }
+      });
+      return reply.status(204).send({ message: "Deletado com sucesso!" });
+    } catch (err) {
+      return reply.status(400).send({ message: "Algo deu errado" });
+    }
+  });
   app.get("/pesquisas", async (request, reply) => {
     const querySchema = import_zod.z.object({
       take: import_zod.z.coerce.number().positive().int().nullish(),
@@ -146,17 +162,19 @@ async function researchRoutes(app) {
     });
     const bodySchema = import_zod.z.object({
       observacao: import_zod.z.string().nullish(),
+      treinamento: import_zod.z.string().nullish(),
       pagamentoVendaPremiada: import_zod.z.string().nullish()
     });
     try {
       const { researchId } = paramsSchema.parse(request.params);
-      const { observacao, pagamentoVendaPremiada } = bodySchema.parse(request.body);
+      const { observacao, treinamento, pagamentoVendaPremiada } = bodySchema.parse(request.body);
       const research = await prisma.pesquisa.update({
         where: {
           id: researchId
         },
         data: {
           observacao,
+          treinamento,
           pagamentoVendaPremiada
         }
       });
@@ -208,16 +226,11 @@ async function researchRoutes(app) {
     }
   });
   app.get("/produto-chave", async (request, reply) => {
-    const querySchema = import_zod.z.object({
-      query: import_zod.z.coerce.number().nullish()
-    });
-    const { query } = querySchema.parse(request.query);
     const productsKey = await prisma.produtoChave.findMany({
       select: {
         nome: true,
         preco: true
-      },
-      take: query ? query : 20
+      }
     });
     return reply.status(200).send({ productsKey });
   });
